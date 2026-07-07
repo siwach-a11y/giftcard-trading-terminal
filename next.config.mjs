@@ -1,4 +1,5 @@
 const isStaticExport = process.env.STATIC_EXPORT === "1";
+const isDockerBuild = process.env.DOCKER_BUILD === "1";
 const basePath = process.env.PAGES_BASE_PATH || "";
 
 /** @type {import('next').NextConfig} */
@@ -20,6 +21,10 @@ const nextConfig = {
         images: { unoptimized: true },
       }
     : {}),
+  // Only set inside the Dockerfile's build stage — produces the minimal
+  // .next/standalone server used to run the public search-only demo
+  // backend on Cloud Run. Local `npm run build`/`npm start` stay unaffected.
+  ...(isDockerBuild ? { output: "standalone" } : {}),
 };
 
 export default nextConfig;

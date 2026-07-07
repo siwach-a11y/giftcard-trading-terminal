@@ -2,8 +2,11 @@
 
 This is a **personal procurement terminal**, not a marketplace or SaaS. One
 operator, one dashboard, zero customers. Everything below describes the
-framework that is shipped — no vendor connector is implemented anywhere in
-this repository (see [`src/connectors/README.md`](../src/connectors/README.md)).
+framework that is shipped, plus four real connectors (Eneba's search is
+fully working; G2A/CardCash/Kinguin are empty shells blocked by
+bot-detection during inspection) — see
+[`src/connectors/README.md`](../src/connectors/README.md) for the full
+status table.
 
 ## Layered flow
 
@@ -209,10 +212,43 @@ FinalScore =
 All weights live in [`config/default.yaml`](../config/default.yaml) and are
 validated by [`src/config/config.schema.ts`](../src/config/config.schema.ts).
 
-## Why no vendor code exists here
+## Why some connectors are empty
 
 The brief for this project is explicit: never fabricate a website, vendor,
-domain, or product catalog. Every piece above is real, generic, and
-testable on its own — the only thing missing is the one file a real
-connector would add (`src/connectors/<name>.connector.ts`), which requires
-knowing an actual site the operator has an account with.
+domain, or product catalog, and never bypass bot-detection to inspect one.
+`EnebaConnector.performSearch` is real because Eneba's search page was
+actually inspectable (server-rendered GraphQL state). G2A/CardCash/Kinguin
+all blocked plain inspection with bot-detection, so their connectors are
+honest empty shells rather than guessed selectors — see
+[`src/connectors/README.md`](../src/connectors/README.md).
+
+## Public demo backend
+
+The GitHub Pages site (https://siwach-a11y.github.io/giftcard-trading-terminal/)
+is a **static export** — no server, so its Search/Execute/live-log are
+disabled by default. At the operator's request, a second deployment exists
+purely so that public page can show real search results: a **search-only**
+copy of this same app runs on Cloud Run (`Dockerfile`, `docker-entrypoint.sh`,
+`config/cloud.yaml`), and the static site is built with
+`NEXT_PUBLIC_API_BASE_URL` pointed at it (`npm run deploy:pages:live`).
+
+This deployment is deliberately narrow:
+
+- **Headless only, `browser.headless: true`.** Manual-auth pause/resume
+  requires a visible browser window, which a cloud container can never
+  provide — so this backend only ever supports connectors whose `search()`
+  doesn't need a login (currently: Eneba). Purchase execution must run
+  locally (`npm run dev`) where you can actually see and interact with the
+  browser.
+- **No persistence across restarts.** Cloud Run gives each new container
+  instance a fresh filesystem; a pre-migrated empty SQLite database is
+  baked into the image and copied to `/tmp` on every cold start.
+- **CORS locked to the GitHub Pages origin and a small in-memory per-IP
+  rate limit** (`src/middleware.ts`), plus `concurrency=1`/`max-instances=2`
+  on the Cloud Run service — this is a public, unauthenticated backend, so
+  these exist to bound cost and abuse risk, not to make it robust at scale.
+- **The Playwright npm package version and the `mcr.microsoft.com/playwright`
+  Docker image tag must match exactly** — playwright-core refuses to launch
+  a browser build that doesn't match its own version. `playwright` is
+  pinned (not caret-ranged) in `package.json` specifically so this can't
+  silently drift on a future `npm install`.

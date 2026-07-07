@@ -13,13 +13,14 @@
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "build:static": "bash scripts/build-static-demo.sh",
-    "deploy:pages": "PAGES_BASE_PATH=/giftcard-trading-terminal npm run build:static && gh-pages -d out --dotfiles"
+    "deploy:pages": "PAGES_BASE_PATH=/giftcard-trading-terminal npm run build:static && gh-pages -d out --dotfiles",
+    "deploy:pages:live": "PAGES_BASE_PATH=/giftcard-trading-terminal NEXT_PUBLIC_API_BASE_URL=\"$CLOUD_API_BASE_URL\" npm run build:static && gh-pages -d out --dotfiles"
   },
   "dependencies": {
     "@prisma/client": "^5.20.0",
     "js-yaml": "^4.1.0",
     "next": "14.2.35",
-    "playwright": "^1.48.0",
+    "playwright": "1.61.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "zod": "^3.23.8"

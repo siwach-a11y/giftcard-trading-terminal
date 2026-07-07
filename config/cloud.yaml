@@ -1,0 +1,40 @@
+# Cloud Run profile for the public search-only demo backend.
+#
+# IMPORTANT: manual-auth pause/resume (2FA/OTP/CAPTCHA) only makes sense
+# when the operator can see the actual browser window, which is only true
+# running locally with headless:false. A headless cloud container can never
+# support that — so this profile (and this deployment) is for read-only
+# SEARCH against connectors that don't require login (currently: Eneba)
+# only. Purchase execution against a real account must run locally.
+
+weights:
+  price: 0.45
+  availability: 0.20
+  speed: 0.15
+  reliability: 0.10
+  risk: 0.10
+
+scoring:
+  maxSearchTimeMs: 15000
+  defaultRisk: 0.2
+
+browser:
+  headless: true
+  timeout: 30000
+  retries: 2
+  screenshotOnError: false
+  screenshotDir: "/tmp/screenshots"
+
+execution:
+  maxDurationMs: 60000
+  manualAuthTimeoutMs: 1000
+
+# Informational only — Prisma reads DATABASE_URL directly from the
+# container's environment, set to a writable /tmp path in the Dockerfile.
+database:
+  provider: "sqlite"
+  url: "file:/tmp/dev.db"
+
+logging:
+  level: "info"
+  destination: "/tmp/terminal.log"
