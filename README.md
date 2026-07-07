@@ -80,6 +80,27 @@ Full details in [`src/connectors/README.md`](src/connectors/README.md).
 - **Right** — Execution panel (status, attempt count, manual-auth Resume button, voucher code + Copy Voucher)
 - **Bottom** — Live execution log (server-sent events streamed from the shared event bus — every search, routing decision, execution step, and error)
 
+## Static UI preview (no backend)
+
+This app's actual purpose — Playwright execution, Prisma persistence —
+needs a real Node server, so it can never be fully functional on a static
+host like GitHub Pages. `npm run build:static` produces a **UI-only
+preview**: the API route handlers are excluded from the build, the
+dashboard shows a "static preview" banner, and Search/Execute/the live log
+become no-ops instead of pretending to have data. It always renders the
+same honest empty state you'd see with zero connectors registered — no
+invented offers or vendors.
+
+```bash
+npm run build:static        # writes ./out
+npx serve out                # preview it locally
+npm run deploy:pages         # build:static + publish ./out to the gh-pages branch
+```
+
+`deploy:pages` sets `PAGES_BASE_PATH=/giftcard-trading-terminal` for GitHub
+Pages' project-site path and requires the `gh-pages` branch to be enabled
+as the Pages source in the repo's Settings.
+
 ## Persistence
 
 SQLite via Prisma (`prisma/schema.prisma`): `SearchHistory`,
@@ -95,6 +116,8 @@ vendor-specific tables — connectors are referenced only by their opaque
 | `npm run build` / `npm run start` | Production build/run |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run db:push` / `npm run db:studio` | Prisma schema sync / data browser |
+| `npm run build:static` | Build the UI-only static export into `./out` |
+| `npm run deploy:pages` | Build static + publish to the `gh-pages` branch |
 
 ## Known trade-offs
 

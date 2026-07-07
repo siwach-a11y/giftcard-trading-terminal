@@ -6,8 +6,15 @@ import { ExecutionLog, LogEntry } from "./ExecutionLog";
 import { ExecutionPanel } from "./ExecutionPanel";
 import { OfferTable } from "./OfferTable";
 import { SearchPanel } from "./SearchPanel";
+import { StaticDemoBanner } from "./StaticDemoBanner";
 
 const MAX_LOG_ENTRIES = 300;
+
+// Set only by scripts/build-static-demo.sh. This app's real function
+// (Playwright execution, Prisma persistence) needs a Node server, so a
+// static export has no backend to call — every handler below becomes a
+// no-op that's honest about that instead of pretending to have data.
+const IS_STATIC_DEMO = process.env.NEXT_PUBLIC_STATIC_DEMO === "1";
 
 export function Dashboard() {
   const [connectorCount, setConnectorCount] = useState(0);
@@ -23,6 +30,7 @@ export function Dashboard() {
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
+    if (IS_STATIC_DEMO) return;
     fetch("/api/connectors")
       .then((r) => r.json())
       .then((data) => setConnectorCount(data.connectors?.length ?? 0))
@@ -30,6 +38,7 @@ export function Dashboard() {
   }, []);
 
   useEffect(() => {
+    if (IS_STATIC_DEMO) return;
     const source = new EventSource("/api/events");
     source.onopen = () => setConnected(true);
     source.onerror = () => setConnected(false);
@@ -48,6 +57,10 @@ export function Dashboard() {
   }, []);
 
   const runSearch = useCallback(async (request: SearchRequest) => {
+    if (IS_STATIC_DEMO) {
+      setExplanation("Static preview — no backend is attached, so no real search ran.");
+      return;
+    }
     setSearching(true);
     try {
       const res = await fetch("/api/search", {
@@ -81,6 +94,7 @@ export function Dashboard() {
 
   const runExecute = useCallback(
     async (offer: Offer) => {
+      if (IS_STATIC_DEMO) return;
       setExecutingOfferId(offer.id);
       const res = await fetch("/api/execute", {
         method: "POST",
@@ -99,7 +113,7 @@ export function Dashboard() {
   );
 
   const resumeManualAuth = useCallback(async () => {
-    if (!execution) return;
+    if (IS_STATIC_DEMO || !execution) return;
     await fetch(`/api/execute/${execution.id}/resume`, { method: "POST" });
   }, [execution]);
 
@@ -113,31 +127,40 @@ export function Dashboard() {
   }, [execution]);
 
   const refreshExecution = useCallback(async () => {
-    if (!execution) return;
+    if (IS_STATIC_DEMO || !execution) return;
     const res = await fetch(`/api/execute/${execution.id}`);
     if (res.ok) setExecution((await res.json()).result);
   }, [execution]);
 
   return (
-    <div className="terminal-grid">
-      <div className="terminal-left">
-        <SearchPanel onSearch={runSearch} loading={searching} connectorCount={connectorCount} />
-      </div>
-      <div className="terminal-center">
-        <OfferTable offers={offers} ranking={ranking} bestOfferId={bestOfferId} onExecute={runExecute} executingOfferId={executingOfferId} />
-        {explanation && <div className="routing-explanation">{explanation}</div>}
-      </div>
-      <div className="terminal-right">
-        <ExecutionPanel
-          execution={execution}
-          onResume={resumeManualAuth}
-          onRetry={retryExecution}
-          onCopyVoucher={copyVoucher}
-          onRefresh={refreshExecution}
-        />
-      </div>
-      <div className="terminal-bottom">
-        <ExecutionLog entries={logEntries} connected={connected} />
+    <div className="terminal-shell">
+      {IS_STATIC_DEMO && <StaticDemoBanner />}
+      <div className="terminal-grid">
+        <div className="terminal-left">
+          <SearchPanel onSearch={runSearch} loading={searching} connectorCount={connectorCount} />
+        </div>
+        <div className="terminal-center">
+          <OfferTable
+            offers={offers}
+            ranking={ranking}
+            bestOfferId={bestOfferId}
+            onExecute={runExecute}
+            executingOfferId={executingOfferId}
+          />
+          {explanation && <div className="routing-explanation">{explanation}</div>}
+        </div>
+        <div className="terminal-right">
+          <ExecutionPanel
+            execution={execution}
+            onResume={resumeManualAuth}
+            onRetry={retryExecution}
+            onCopyVoucher={copyVoucher}
+            onRefresh={refreshExecution}
+          />
+        </div>
+        <div className="terminal-bottom">
+          <ExecutionLog entries={logEntries} connected={connected} />
+        </div>
       </div>
     </div>
   );
