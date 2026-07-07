@@ -15,12 +15,15 @@ Smart Order Router, the Execution Engine (with manual-auth pause/resume,
 retries, timeouts, screenshots), a generic Voucher Parser, a SQLite/Prisma
 persistence layer, and a dark trading-terminal dashboard UI.
 
-**No vendor connector is implemented.** `src/connectors/` intentionally
-ships zero subclasses of `PlaywrightConnector` — see
-[`src/connectors/README.md`](src/connectors/README.md) for how to plug in a
-real website you are personally authorized to automate. Until you do,
-`ConnectorRegistry.list()` is empty and the dashboard's offer table stays
-empty — that's correct, not a bug.
+**Four real connectors are registered** (`src/config/container.ts`):
+Eneba, G2A, CardCash, Kinguin. Only **Eneba's search** is actually
+implemented, against real, verified site structure — the other three (and
+Eneba's own login/purchase/verify) are empty shells that throw a clear
+"not implemented" error instead of guessing selectors, because their sites
+blocked automated inspection with bot-detection that this project won't
+bypass. See [`src/connectors/README.md`](src/connectors/README.md) for the
+full status table and how to complete any of them yourself with
+`npx playwright codegen` against your own logged-in session.
 
 See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the full class
 diagram, sequence diagrams, and the scoring formula.
@@ -35,8 +38,10 @@ npx prisma db push                 # creates prisma/dev.db from prisma/schema.pr
 npm run dev
 ```
 
-Open http://localhost:3000. The dashboard loads with zero connectors and an
-empty offer table until you register one (see below).
+Open http://localhost:3000. Searching a product (e.g. "steam") returns real
+live offers from Eneba; G2A/CardCash/Kinguin will show up as failed
+connectors in the execution log until their connectors are completed (see
+below). Playwright needs its browser binary once: `npx playwright install chromium`.
 
 ## Configuration
 
@@ -58,20 +63,31 @@ browser:
 
 Point at a different file with `TRADING_TERMINAL_CONFIG=/path/to/file.yaml`.
 
-## Adding a real connector
+## Completing or adding a connector
 
 1. Extend `PlaywrightConnector` (`src/connectors/base/playwright.connector.ts`)
-   in a new file under `src/connectors/`.
+   in a new file under `src/connectors/`, or edit one of the four existing
+   ones.
 2. Implement the abstract vendor-specific steps: `performLogin`,
    `performSearch`, `performPurchase`, `performVerify`, `performHealthCheck`.
+   For a bot-protected or heavily client-rendered site, record real
+   selectors with `npx playwright codegen <url>` against your own logged-in
+   session rather than guessing.
 3. Register it at startup: `connectorRegistry.register(new YourConnector())`
-   in `src/config/container.ts`.
+   in `src/config/container.ts` (the four existing connectors are already
+   wired here).
 4. Never script past a login challenge, CAPTCHA, or 2FA/OTP step — call the
    `onManualAuthRequired` handler and let the Execution Engine pause until
    you complete it by hand in the visible browser window, then click
    **Resume** in the dashboard.
 
-Full details in [`src/connectors/README.md`](src/connectors/README.md).
+Full details, plus a status table for the four existing connectors, in
+[`src/connectors/README.md`](src/connectors/README.md).
+
+**Note on Terms of Service:** most gift-card marketplaces' ToS restrict
+automated access. This tool never bypasses login/CAPTCHA/2FA, but running
+any of these connectors against your own account is still something to
+weigh yourself before doing it.
 
 ## Dashboard layout
 

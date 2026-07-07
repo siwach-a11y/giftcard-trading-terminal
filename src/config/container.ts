@@ -1,3 +1,7 @@
+import { CardCashConnector } from "@/connectors/cardcash.connector";
+import { EnebaConnector } from "@/connectors/eneba.connector";
+import { G2AConnector } from "@/connectors/g2a.connector";
+import { KinguinConnector } from "@/connectors/kinguin.connector";
 import { connectorRegistry } from "@/connectors/registry";
 import { EventBus, eventBus } from "@/core/events/event-bus";
 import { ExecutionEngine } from "@/core/execution/execution-engine";
@@ -46,6 +50,22 @@ class Container {
     this.voucherParser,
     this.executionHistoryRepository
   );
+
+  constructor() {
+    // Guarded because Next.js dev-mode module reloads can re-run this
+    // constructor against the same globalThis-cached ConnectorRegistry
+    // instance (see the globalForContainer pattern below).
+    for (const connector of [
+      new EnebaConnector(),
+      new G2AConnector(),
+      new CardCashConnector(),
+      new KinguinConnector(),
+    ]) {
+      if (!this.connectorRegistry.get(connector.id)) {
+        this.connectorRegistry.register(connector);
+      }
+    }
+  }
 }
 
 const globalForContainer = globalThis as unknown as { terminalContainer?: Container };
