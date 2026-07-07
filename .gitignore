@@ -1,0 +1,17 @@
+node_modules/
+.next/
+*.tsbuildinfo
+out/
+dist/
+build/
+*.log
+.env
+.env.local
+.DS_Store
+prisma/dev.db
+prisma/dev.db-journal
+/generated/
+test-results/
+playwright-report/
+screenshots/
+.playwright-mcp/

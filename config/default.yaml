@@ -1,0 +1,41 @@
+# Personal E-Gift Card Trading Terminal — configuration
+# All values here are operator-tunable. Nothing in this file references any
+# specific vendor, website, or product — that only ever comes from connectors
+# registered at runtime (see src/connectors/README.md).
+
+weights:
+  price: 0.45
+  availability: 0.20
+  speed: 0.15
+  reliability: 0.10
+  risk: 0.10
+
+scoring:
+  # Upper bound used to normalize SpeedScore = 1 - (searchTime / maxSearchTimeMs)
+  maxSearchTimeMs: 15000
+  # Default risk score applied to a connector with no manual override configured.
+  defaultRisk: 0.2
+
+browser:
+  headless: false
+  timeout: 30000
+  retries: 3
+  screenshotOnError: true
+  screenshotDir: "./screenshots"
+
+execution:
+  # Hard ceiling for a single purchase attempt, including any manual-auth pause.
+  maxDurationMs: 300000
+  # How long to wait for the operator to complete a manual authentication step
+  # (2FA, CAPTCHA, OTP) before the execution is aborted.
+  manualAuthTimeoutMs: 180000
+
+# Informational only — Prisma itself reads DATABASE_URL from .env/.env.local
+# (see .env.local.example), not from this file.
+database:
+  provider: "sqlite"
+  url: "file:./prisma/dev.db"
+
+logging:
+  level: "info"
+  destination: "./logs/terminal.log"
