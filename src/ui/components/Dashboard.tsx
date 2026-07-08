@@ -8,6 +8,7 @@ import { LiveDemoBanner } from "./LiveDemoBanner";
 import { OfferTable } from "./OfferTable";
 import { SearchPanel } from "./SearchPanel";
 import { StaticDemoBanner } from "./StaticDemoBanner";
+import { TopBar } from "./TopBar";
 
 const MAX_LOG_ENTRIES = 300;
 
@@ -143,6 +144,7 @@ export function Dashboard() {
 
   return (
     <div className="terminal-shell">
+      <TopBar connectorCount={connectorCount} />
       {STATIC_EXPORT && (HAS_BACKEND ? <LiveDemoBanner /> : <StaticDemoBanner />)}
       <div className="terminal-grid">
         <div className="terminal-left">

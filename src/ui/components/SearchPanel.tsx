@@ -30,7 +30,9 @@ export function SearchPanel({ onSearch, loading, connectorCount }: Props) {
 
   return (
     <div className="panel search-panel">
-      <div className="panel-header">SEARCH</div>
+      <div className="panel-header">
+        <span>SEARCH</span>
+      </div>
       <form onSubmit={submit} className="search-form">
         <label>
           Product
@@ -53,7 +55,13 @@ export function SearchPanel({ onSearch, loading, connectorCount }: Props) {
           <input value={quantity} onChange={(e) => setQuantity(e.target.value)} type="number" min={1} />
         </label>
         <button type="submit" className="btn btn-primary" disabled={loading || !product.trim()}>
-          {loading ? "Searching…" : "Search"}
+          {loading ? (
+            <>
+              <span className="btn-spinner" /> Searching…
+            </>
+          ) : (
+            "⌕ Search"
+          )}
         </button>
       </form>
       <div className="panel-footnote">

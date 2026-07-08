@@ -17,7 +17,13 @@ export async function GET() {
   const stream = new ReadableStream({
     start(controller) {
       unsubscribe = container.eventBus.onAny((event, payload) => {
-        const chunk = `event: ${event}\ndata: ${JSON.stringify({ event, payload, timestamp: new Date().toISOString() })}\n\n`;
+        // Deliberately no `event: <name>` field here — the event name
+        // travels inside the JSON body instead. EventSource.onmessage
+        // (what the dashboard listens on) only fires for frames using the
+        // default "message" type; a named `event:` field would require
+        // addEventListener(name, ...) per event instead, which defeats the
+        // point of a single generic log stream.
+        const chunk = `data: ${JSON.stringify({ event, payload, timestamp: new Date().toISOString() })}\n\n`;
         controller.enqueue(encoder.encode(chunk));
       });
 

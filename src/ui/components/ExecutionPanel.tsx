@@ -24,13 +24,18 @@ export function ExecutionPanel({ execution, onResume, onRetry, onCopyVoucher, on
   return (
     <div className="panel execution-panel">
       <div className="panel-header">
-        EXECUTION
+        <span>EXECUTION</span>
         <button className="btn btn-tiny" onClick={onRefresh}>
-          Refresh
+          ⟳ Refresh
         </button>
       </div>
 
-      {!execution && <div className="empty-row">No execution in progress.</div>}
+      {!execution && (
+        <div className="empty-state">
+          <span className="empty-state-icon">▷</span>
+          No execution in progress.
+        </div>
+      )}
 
       {execution && (
         <div className="execution-body">
@@ -40,7 +45,7 @@ export function ExecutionPanel({ execution, onResume, onRetry, onCopyVoucher, on
           </div>
           <div className="execution-row">
             <span className="dim">Product</span>
-            <span>{execution.offer.product}</span>
+            <span className="execution-value-right">{execution.offer.product}</span>
           </div>
           <div className="execution-row">
             <span className="dim">Status</span>
@@ -53,7 +58,7 @@ export function ExecutionPanel({ execution, onResume, onRetry, onCopyVoucher, on
             </span>
           </div>
           {execution.error && (
-            <div className="execution-row">
+            <div className="error-box">
               <span className="dim">Error</span>
               <span className="text-red">{execution.error}</span>
             </div>
